@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.png
+output/
+secrets/
+chickener-image.json
+*.secret.json
+config.local.json
+

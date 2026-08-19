@@ -1,0 +1,4 @@
+interface:
+  display_name: "Chickener Image Gateway"
+  short_description: "Default personal gateway for image generation"
+  default_prompt: "Use $chickener-image to generate a polished raster image."
