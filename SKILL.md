@@ -51,6 +51,16 @@ Circuit breaker: after two consecutive failed attempts for the same task, stop g
 
 Never silently switch models or endpoints after a failure; offer the switch as an option instead.
 
+## Multi-turn editing
+
+The API is stateless: there is no server-side session, so each follow-up edit must pass the previous output file back as `--input` with `--operation edit`. Keep the chain on disk:
+
+1. Generate or edit to a file such as `output/imagegen/poster.png`.
+2. For a follow-up change, run `--operation edit --input output/imagegen/poster.png --out output/imagegen/poster-2.png` with one targeted instruction.
+3. Number each new round (`poster-2.png`, `poster-3.png`, ...) instead of overwriting, so any earlier round stays recoverable.
+
+Make one meaningful change per round and state explicitly what must be preserved, for example: "Replace the background with a night sky. Preserve the subject, camera angle, text, and colors." Use `gpt-image-2.5-sunburst` for precision-sensitive edits. Quality degrades over many sequential edits (detail drift, warped text), so for large changes prefer regenerating from the original image or from scratch rather than chaining a long edit sequence.
+
 ## Inline delivery example
 
 Use a dedicated `functions.exec` call after visual inspection:
