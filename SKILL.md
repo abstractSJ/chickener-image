@@ -38,6 +38,19 @@ Some gateways also list `gemini-3.1-flash-image`, but it is served through chat 
 
 Default routing: drafts use `gpt-image-2.5-flare` with `--quality low`; final assets use `gpt-image-2.5-flare` with `medium` or `high`; work where a wrong detail makes the image unusable (text, logos, product shape, character identity, multi-step edits) uses `gpt-image-2.5-sunburst`. A `model` value in the configuration file overrides this routing as the default; `--model` overrides both for a single run.
 
+## Error handling
+
+The script never retries a request by itself; do not compensate by firing repeated generation requests in a loop. Every attempt is potentially billable, even ones that fail or time out.
+
+Classify the failure before acting:
+
+- Request or configuration errors (HTTP 400, 401, 403, 404, invalid parameter, model not found): never retry the identical request. Fix the cause once, such as a wrong model name or bad parameter, or stop and report.
+- Provider-side failures (HTTP 429, 5xx, timeout, connection error, no available channel): the upstream may be degraded. Wait at least 60 seconds, then make at most one follow-up attempt with the identical request.
+
+Circuit breaker: after two consecutive failed attempts for the same task, stop generating entirely. Report the HTTP status and the redacted error body, state that retries stopped to avoid repeated charges, and ask the user how to proceed: wait, pick another model from the configuration `models` list, or switch the endpoint. Do not send further image requests until the user responds.
+
+Never silently switch models or endpoints after a failure; offer the switch as an option instead.
+
 ## Inline delivery example
 
 Use a dedicated `functions.exec` call after visual inspection:
@@ -87,6 +100,7 @@ Image generation requests use a 240-second client timeout so slower successful p
 - Keep all image requests serial: only one request may be in flight at a time.
 - When multiple outputs are requested, issue one `n=1` request per output rather than relying on batched `n` responses.
 - Never automatically retry an image API request. A timeout, connection failure, HTTP error, or malformed response may occur after the provider has already processed and charged the request.
+- Never loop generation requests in the conversation either; after two consecutive failures for the same task, stop and ask the user per the Error handling section.
 - Preserve successful outputs when a later serial request fails, and report the affected output with a warning that the result may have been charged.
 - Always emit every approved output with `generatedImage(...)` after generation or editing succeeds. A successful `view_image` inspection alone does not count as delivery.
 - If the API reports no available channel, report the provider-side routing error rather than retrying with another model.
