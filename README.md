@@ -31,11 +31,14 @@ The simplest option is a skill-local configuration file. Copy `config.example.js
 ```json
 {
   "api_base": "https://your-gateway.example.com/v1",
-  "api_key": "sk-replace-with-your-key"
+  "api_key": "sk-replace-with-your-key",
+  "model": "gpt-image-2"
 }
 ```
 
 `config.json` is listed in `.gitignore` and must never be committed. When it exists, it takes precedence over the per-user secrets file below.
+
+The `model` field is optional and sets the default image model. `CHICKENER_IMAGE_MODEL` overrides it, and the `--model` flag overrides both for a single run.
 
 The configuration helper prompts for the API base URL and hides API key input. It writes to:
 

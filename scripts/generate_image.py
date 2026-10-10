@@ -55,8 +55,8 @@ def _value(obj: Any, name: str, default: Any = None) -> Any:
     return getattr(obj, name, default)
 
 
-def load_config(config_path: Path) -> tuple[str, str]:
-    """Load and validate the configured API base URL and key."""
+def load_config(config_path: Path) -> tuple[str, str, str | None]:
+    """Load and validate the configured API base URL, key, and optional model."""
     candidates = [SKILL_LOCAL_CONFIG]
     if config_path != SKILL_LOCAL_CONFIG:
         candidates.append(config_path)
@@ -82,7 +82,8 @@ def load_config(config_path: Path) -> tuple[str, str]:
         raise RuntimeError("Image API base URL must start with http:// or https://")
     if not api_key:
         raise RuntimeError("Image API key is missing from the local configuration or environment")
-    return base_url, api_key
+    model = os.environ.get("CHICKENER_IMAGE_MODEL", str(config.get("model", ""))).strip()
+    return base_url, api_key, model or None
 
 
 def resolve_operation(inputs: Sequence[Path], operation: str | None) -> str:
@@ -511,7 +512,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-dir", type=Path)
     parser.add_argument("--operation", choices=OPERATIONS)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
-    parser.add_argument("--model", default=DEFAULT_MODEL)
+    # Default is resolved after configuration loads so config.json or the
+    # CHICKENER_IMAGE_MODEL environment variable can supply the default model.
+    parser.add_argument("--model", default=None)
     parser.add_argument("--size", default="1024x1024")
     parser.add_argument("--quality", choices=("low", "medium", "high", "auto"), default="medium")
     parser.add_argument("--force", action="store_true")
@@ -531,7 +534,8 @@ def main() -> int:
         validate_inputs(inputs)
         outputs = build_output_paths(operation, inputs, args.out, args.out_dir, cwd=cwd)
         validate_outputs(outputs, args.force)
-        base_url, api_key = load_config(args.config)
+        base_url, api_key, configured_model = load_config(args.config)
+        model = args.model or configured_model or DEFAULT_MODEL
         results = execute_plan(
             operation,
             args.prompt.strip(),
@@ -539,7 +543,7 @@ def main() -> int:
             outputs,
             base_url,
             api_key,
-            args.model,
+            model,
             args.size,
             args.quality,
             args.force,

@@ -1,4 +1,5 @@
 {
   "api_base": "https://your-gateway.example.com/v1",
-  "api_key": "sk-replace-with-your-key"
+  "api_key": "sk-replace-with-your-key",
+  "model": "gpt-image-2"
 }
