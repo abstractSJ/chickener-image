@@ -1,5 +1,10 @@
 {
   "api_base": "https://your-gateway.example.com/v1",
   "api_key": "sk-replace-with-your-key",
-  "model": "gpt-image-2"
+  "model": "gpt-image-2.5-flare",
+  "models": [
+    "gpt-image-2.5-flare",
+    "gpt-image-2.5-sunburst",
+    "gpt-image-2"
+  ]
 }

@@ -40,6 +40,8 @@ The simplest option is a skill-local configuration file. Copy `config.example.js
 
 The `model` field is optional and sets the default image model. `CHICKENER_IMAGE_MODEL` overrides it, and the `--model` flag overrides both for a single run.
 
+The `models` field is an optional list of the image models the configured endpoint actually supports. The agent treats it as the whitelist when choosing a model. Check the endpoint's `/v1/models` listing and keep only the image models that work through the Images API.
+
 The configuration helper prompts for the API base URL and hides API key input. It writes to:
 
 ```text

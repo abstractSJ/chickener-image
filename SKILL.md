@@ -22,6 +22,22 @@ When input images are present, first determine from the user's wording whether t
 9. Do not use a plain `view_image` call, the generic `image(...)` helper, a Markdown link, or a filesystem path as the user-facing image delivery. Each image must be emitted with `generatedImage(...)`. Do not report saved paths unless the user asks for them or needs them integrated into project files.
 10. Report the model, size, quality, and final prompt concisely after the inline images. Never print credentials or configuration-file contents.
 
+## Model selection
+
+Choose the model yourself unless the user names one. If the active configuration file lists a `models` array, treat it as the whitelist of what the configured endpoint actually supports and choose only from it. Otherwise fall back to the built-in default.
+
+| Model | Traits | Choose for |
+|---|---|---|
+| `gpt-image-2.5-flare` | Fastest current model; quality comparable to or better than gpt-image-2 at much lower latency | Everyday generation, drafts, bulk or user-facing requests |
+| `gpt-image-2.5-sunburst` | Highest quality and editing precision; noticeably slower | Final assets, multi-turn edits, in-image text, product or character fidelity |
+| `gpt-image-2.5` | Unsuffixed alias some gateways route to flare or sunburst | Avoid; prefer the explicit flare or sunburst ID when listed |
+| `gpt-image-2` | Previous generation; reliable baseline | When no 2.5 variant is available on the endpoint |
+| `gpt-image-1.5` | Older, cheapest and quickest, visibly weaker | Rough drafts only |
+
+Some gateways also list `gemini-3.1-flash-image`, but it is served through chat completions rather than the Images API, so the script cannot call it; do not select it.
+
+Default routing: drafts use `gpt-image-2.5-flare` with `--quality low`; final assets use `gpt-image-2.5-flare` with `medium` or `high`; work where a wrong detail makes the image unusable (text, logos, product shape, character identity, multi-step edits) uses `gpt-image-2.5-sunburst`. A `model` value in the configuration file overrides this routing as the default; `--model` overrides both for a single run.
+
 ## Inline delivery example
 
 Use a dedicated `functions.exec` call after visual inspection:
@@ -63,7 +79,7 @@ Image generation requests use a 240-second client timeout so slower successful p
 
 ## Constraints
 
-- Default to `gpt-image-2`, PNG output, and opaque backgrounds.
+- Pick the model per the Model selection section; PNG output and opaque backgrounds stay fixed.
 - Accept at most 4 input images and at most 4 final output images per task; refuse before any API request when either limit is exceeded.
 - Keep the input order stable as `图1` through `图4`; when multiple images are jointly referenced, submit them in that order and preserve the mapping in the prompt context.
 - Do not request `background=transparent`; this provider path is validated only for normal image generation.
