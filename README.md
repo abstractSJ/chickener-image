@@ -26,6 +26,17 @@ The installing agent should:
 
 ## Local configuration
 
+The simplest option is a skill-local configuration file. Copy `config.example.json` to `config.json` in the skill directory and fill in the two fields:
+
+```json
+{
+  "api_base": "https://your-gateway.example.com/v1",
+  "api_key": "sk-replace-with-your-key"
+}
+```
+
+`config.json` is listed in `.gitignore` and must never be committed. When it exists, it takes precedence over the per-user secrets file below.
+
 The configuration helper prompts for the API base URL and hides API key input. It writes to:
 
 ```text

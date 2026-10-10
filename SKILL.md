@@ -40,7 +40,8 @@ generatedImage({
 ## First-time setup
 
 - The script uses the official OpenAI Python SDK. If `openai` is unavailable, install `<skill-directory>/requirements.txt` into the active Python environment.
-- The default configuration file is `$CODEX_HOME/secrets/chickener-image.json`, with `$CODEX_HOME` defaulting to `~/.codex`.
+- The simplest setup is a skill-local configuration file: copy `<skill-directory>/config.example.json` to `<skill-directory>/config.json` and fill in `api_base` and `api_key`. The file is git-ignored and must never be committed.
+- Alternatively, use the per-user configuration file `$CODEX_HOME/secrets/chickener-image.json`, with `$CODEX_HOME` defaulting to `~/.codex`. The skill-local `config.json` takes precedence when both exist.
 - If configuration is missing, instruct the user to run `python <skill-directory>/scripts/configure.py` themselves in a local interactive terminal. The helper hides API key input and writes the configuration outside the skill directory.
 - Never ask the user to paste an API key into chat, pass it on a command line, print it, or commit it. The user must enter it locally through the configuration helper or set `CHICKENER_IMAGE_API_BASE` and `CHICKENER_IMAGE_API_KEY` in their environment.
 - After configuration, verify presence without revealing values by running `python <skill-directory>/scripts/configure.py --check`.

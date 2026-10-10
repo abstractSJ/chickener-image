@@ -9,4 +9,5 @@ secrets/
 chickener-image.json
 *.secret.json
 config.local.json
+config.json
 

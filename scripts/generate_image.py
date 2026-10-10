@@ -35,6 +35,9 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 SUPPORTED_INPUT_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 OPERATIONS = ("generate", "edit", "batch", "reference")
 DEFAULT_CONFIG = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "secrets" / "chickener-image.json"
+# Skill-local config enables one-file deployment: drop config.json next to
+# SKILL.md and no per-user secrets directory is needed.
+SKILL_LOCAL_CONFIG = Path(__file__).resolve().parent.parent / "config.json"
 
 
 @dataclass(frozen=True)
@@ -54,15 +57,25 @@ def _value(obj: Any, name: str, default: Any = None) -> Any:
 
 def load_config(config_path: Path) -> tuple[str, str]:
     """Load and validate the configured API base URL and key."""
+    candidates = [SKILL_LOCAL_CONFIG]
+    if config_path != SKILL_LOCAL_CONFIG:
+        candidates.append(config_path)
+    config: Any = None
+    chosen_path = candidates[-1]
+    for candidate in candidates:
+        if candidate.exists():
+            chosen_path = candidate
+            break
     try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config = json.loads(chosen_path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise RuntimeError(f"Image API configuration was not found: {config_path}") from exc
+        searched = " or ".join(str(path) for path in candidates)
+        raise RuntimeError(f"Image API configuration was not found: {searched}") from exc
     except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Image API configuration is not valid JSON: {config_path}") from exc
+        raise RuntimeError(f"Image API configuration is not valid JSON: {chosen_path}") from exc
 
     if not isinstance(config, dict):
-        raise RuntimeError(f"Image API configuration must be a JSON object: {config_path}")
+        raise RuntimeError(f"Image API configuration must be a JSON object: {chosen_path}")
     base_url = os.environ.get("CHICKENER_IMAGE_API_BASE", str(config.get("api_base", ""))).strip().rstrip("/")
     api_key = os.environ.get("CHICKENER_IMAGE_API_KEY", str(config.get("api_key", ""))).strip()
     if not base_url.startswith(("http://", "https://")):

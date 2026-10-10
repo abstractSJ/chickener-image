@@ -17,6 +17,8 @@ DEFAULT_CONFIG = (
     / "secrets"
     / "chickener-image.json"
 )
+# Skill-local config.json is an alternative deployment-time configuration.
+SKILL_LOCAL_CONFIG = Path(__file__).resolve().parent.parent / "config.json"
 
 
 def read_config(config_path: Path) -> dict[str, Any]:
@@ -93,10 +95,11 @@ def configure(config_path: Path) -> None:
 def check(config_path: Path) -> None:
     """Check effective configuration without printing sensitive values."""
 
-    config = read_config(config_path)
+    chosen_path = SKILL_LOCAL_CONFIG if SKILL_LOCAL_CONFIG.exists() else config_path
+    config = read_config(chosen_path)
     base_url, api_key = effective_settings(config)
     validate_settings(base_url, api_key)
-    print(f"Configuration is valid: {config_path}")
+    print(f"Configuration is valid: {chosen_path}")
     print("Credential values were not displayed.")
 
 
